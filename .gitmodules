@@ -1,0 +1,3 @@
+[submodule "aws-php-sample"]
+	path = aws-php-sample
+	url = https://github.com/awslabs/aws-php-sample.git
