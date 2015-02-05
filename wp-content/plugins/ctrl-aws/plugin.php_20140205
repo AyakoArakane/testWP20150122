@@ -1,0 +1,65 @@
+<?php
+/*
+Plugin Name: Control AWS Core
+Version: 0.2.2
+Plugin URI: 
+Description: Media uploader for AWS S3.Allows you to mirror your WordPress media uploads over to Amazon S3 for storage and delivery. 
+Author: R-unit
+Author URI: 
+Text Domain: ctrl-aws
+Domain Path: /languages/
+*/
+if ( !class_exists('S3_helper') )
+	require(dirname(__FILE__).'/includes/class-S3_helper.php');
+if ( !class_exists('Dynamo_helper') )
+	require(dirname(__FILE__).'/includes/class-Dynamo_helper.php');
+if ( !class_exists('ControlAws_Admin') )
+	require(dirname(__FILE__).'/includes/class-ControlAws_Admin.php');
+if ( !class_exists('ControlAws') )
+	require(dirname(__FILE__).'/includes/class-ControlAws.php');
+
+load_plugin_textdomain(ControlAws::TEXT_DOMAIN, false, dirname(plugin_basename(__FILE__)) . '/languages/');
+$dynamo = Dynamo_helper::get_instance();
+$dynamo->init(
+	'AKIAIW3UVYUESMFSGWOA',
+	'UMg8f8TBrtOFXJi8wBdL3RJdQrBaUS1JpvOEj95D',
+	'US_WEST_2'
+);
+if ($dynamo) {  
+	$access_key = 'AKIAIW3UVYUESMFSGWOA';
+	$secret_key = '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';
+	$session_table = 'mesh_session_development';
+	$regions = $dynamo->get_regions(); 
+	$dynamo->set_session($access_key,$secret_key,$dynamo,$session_table); 
+	/*
+	session_start();
+	if (isset($_SESSION["username"])) {
+		 echo $_SESSION["username"];
+	} else {
+		 $_SESSION["username"] = "mochizuki01";
+	}
+	session_write_close();
+	 */
+}
+/*
+$s3 = S3_helper::get_instance();
+$s3->init(
+	'AKIAIW3UVYUESMFSGWOA',
+	'UMg8f8TBrtOFXJi8wBdL3RJdQrBaUS1JpvOEj95D',
+	'US_WEST_2'
+);
+if ($s3) {  
+$regions = $s3->get_regions(); 
+	$buckets = $s3->list_buckets();
+	echo var_dump($buckets);
+}
+ */
+// Go Go Go!
+$ctrlaws = ControlAws::get_instance();
+$ctrlaws->init(ControlAws_Admin::get_option());
+$ctrlaws->add_hook();
+if (is_admin()) {
+	$ctrlaws_admin = ControlAws_Admin::get_instance();
+	$ctrlaws_admin->init();
+	$ctrlaws_admin->add_hook();
+}
