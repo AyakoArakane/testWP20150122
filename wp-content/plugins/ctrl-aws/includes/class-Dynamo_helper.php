@@ -3,6 +3,7 @@ require_once(dirname(__FILE__).'/aws.phar');
 
 use Aws\Common\Aws;
 use Aws\Common\Enum\Region;
+use Aws\DynamoDb\Enum\Type;
 use Aws\DynamoDb\DynamoDbClient;
 use Aws\DynamoDb\Session\SessionHandler;
 
@@ -52,6 +53,18 @@ class Dynamo_helper {
 			'table_name'      => $session_table,
 		));
 		$sessionHandler->register();
+	}
+	public function get_session($session,$session_table){
+		$result = $this->dynamo->getItem(array(
+			'ConsistentRead' => true,
+			'TableName' => $session_table,
+			'Key' => array(
+				'id'  => array( 'S' => $session)
+			)
+		));
+		$rsession = $result['Item']['id']['S'];
+		$rdata = $result['Item']['data']['S'];
+		return $rsession;
 	}
 
 	public function get_region($region) {

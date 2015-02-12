@@ -35,7 +35,7 @@ class ControlSession {
 	static public function plugin_basename() {
 		return plugin_basename(dirname(dirname(__FILE__)).'/plugin.php');
 	}
-	function init_dynamo_sessions() {
+	public function init_dynamo_sessions() {
 		$session_table = isset(self::$options['session_table']) ? self::$options['session_table'] : false;
 		$access_key = isset(self::$options['access_key']) ? self::$options['access_key'] : false;
 		$secret_key = isset(self::$options['secret_key']) ? self::$options['secret_key'] : false;
@@ -68,31 +68,28 @@ class ControlSession {
 			session_write_close();
 		}
 	}
+	public function is_dynamo_session($session) {
+		$session_table = isset(self::$options['session_table']) ? self::$options['session_table'] : false;
+		$access_key = isset(self::$options['access_key']) ? self::$options['access_key'] : false;
+		$secret_key = isset(self::$options['secret_key']) ? self::$options['secret_key'] : false;
+		$region = isset(self::$options['region']) ? self::$options['region'] : false;
 
-
-
-	// Initializing S3 object
-	private function s3($S3_bucket = null){
-		if (isset(self::$s3)) {
-			if (isset($S3_bucket) && self::$s3->current_bucket() !== $S3_bucket)
-				self::$s3->set_current_bucket($S3_bucket);
-			return self::$s3;
-		}
-		if (self::$options) {
-			$s3 = S3_helper::get_instance();
-			$s3->init(
-				isset(self::$options['access_key']) ? self::$options['access_key'] : null,
-				isset(self::$options['secret_key']) ? self::$options['secret_key'] : null,
-				isset(self::$options['region'])     ? self::$options['region']     : null
-				);
-			if ($s3 && isset($S3_bucket))
-				$s3->set_current_bucket($S3_bucket);
-			self::$s3 = $s3;
-			return $s3;
+		$dynamo = Dynamo_helper::get_instance();
+		$dynamo->init(
+			$access_key, 
+			$secret_key, 
+			$region 
+		);
+		if ($dynamo) {  
+			$rsession = $dynamo->get_session($session,$session_table); 
+			if (isset($rsession)) {
+				return true;
+			}	
 		}
 		return false;
-	}
 
+
+        }
 
 
 

@@ -36,7 +36,7 @@ class ControlAws_Admin {
 
 	public function init(){
 		self::$options = $this->get_option();
-		$this->plugin_basename = ControlAws::plugin_basename();
+		$this->plugin_basename = ControlSession::plugin_basename();
 	}
 
 	public function add_hook(){
@@ -46,12 +46,16 @@ class ControlAws_Admin {
 
 	static public function option_keys(){
 		return array(
-			'access_key' => __('AWS Access Key',  ControlAws::TEXT_DOMAIN),
-			'secret_key' => __('AWS Secret Key',  ControlAws::TEXT_DOMAIN),
-			'region'     => __('AWS Region',  ControlAws::TEXT_DOMAIN),
-			'bucket'     => __('S3 Bucket',  ControlAws::TEXT_DOMAIN),
-			's3_url'     => __('S3 URL', ControlAws::TEXT_DOMAIN),
-			'session_table'     => __('Session table Name', ControlAws::TEXT_DOMAIN),
+			'access_key' => __('AWS Access Key',  ControlSession::TEXT_DOMAIN),
+			'secret_key' => __('AWS Secret Key',  ControlSession::TEXT_DOMAIN),
+			'session_table'     => __('Session table Name', ControlSession::TEXT_DOMAIN),
+			'region'     => __('AWS Region',  ControlSession::TEXT_DOMAIN),
+			'bucket'     => __('S3 Bucket for Firmware',  ControlSession::TEXT_DOMAIN),
+			's3_url'     => __('S3 URL', ControlSession::TEXT_DOMAIN),
+			's3_firmfire_filename_gpio'         => __('S3 Firmware Filename of gpio', ControlSession::TEXT_DOMAIN),
+			's3_firmfire_filename_button'       => __('S3 Firmware Filename of button', ControlSession::TEXT_DOMAIN),
+			's3_firmfire_filename_acceleration' => __('S3 Firmware Filename of acceleration', ControlSession::TEXT_DOMAIN),
+			's3_firmfire_filename_led'          => __('S3 Firmware Filename of led', ControlSession::TEXT_DOMAIN),
 			);
 	}
 
@@ -70,7 +74,7 @@ class ControlAws_Admin {
 	public function admin_menu() {
 		global $wp_version;
 
-		$title = __('Control AWS', ControlAws::TEXT_DOMAIN);
+		$title = __('Control AWS', ControlSession::TEXT_DOMAIN);
 		$this->admin_hook = add_options_page($title, $title, 'manage_options', self::OPTION_PAGE, array($this, 'options_page'));
 		$this->admin_action = admin_url('/options-general.php') . '?page=' . self::OPTION_PAGE;
 	}
@@ -81,7 +85,7 @@ class ControlAws_Admin {
 
 		$option_keys   = $this->option_keys();
 		self::$options = $this->get_option();
-		$title = __('Control AWS', ControlAws::TEXT_DOMAIN);
+		$title = __('Control AWS', ControlSession::TEXT_DOMAIN);
 
 		$iv = new InputValidator('POST');
 		$iv->set_rules($nonce_name, 'required');
@@ -109,9 +113,9 @@ class ControlAws_Admin {
 					$err = '';
 					foreach ($error_data->errors as $errors) {
 						foreach ($errors as $error) {
-							$err .= (!empty($err) ? '<br />' : '') . __('Error! : ', ControlAws::TEXT_DOMAIN);
+							$err .= (!empty($err) ? '<br />' : '') . __('Error! : ', ControlSession::TEXT_DOMAIN);
 							$err .= sprintf(
-								__(str_replace($key, '%s', $error), ControlAws::TEXT_DOMAIN),
+								__(str_replace($key, '%s', $error), ControlSession::TEXT_DOMAIN),
 								$field
 								);
 						}
@@ -132,7 +136,7 @@ class ControlAws_Admin {
 				$options['s3_url'] = 'http://' . preg_replace('#^//?#', '', $options['s3_url']);
 			}
 			$options['s3_url'] = untrailingslashit($options['s3_url']);
-			if (ControlAws::DEBUG_MODE && function_exists('dbgx_trace_var')) {
+			if (ControlSession::DEBUG_MODE && function_exists('dbgx_trace_var')) {
 				dbgx_trace_var($options);
 			}
 
@@ -143,14 +147,14 @@ class ControlAws_Admin {
 					global $wpdb;
 					$sql = $wpdb->prepare(
 						"delete from {$wpdb->postmeta} where meta_key in (%s, %s)",
-						ControlAws::META_KEY,
-						ControlAws::META_KEY.'-replace'
+						ControlSession::META_KEY,
+						ControlSession::META_KEY.'-replace'
 						);
 					$wpdb->query($sql);
 				}
 				printf(
 					'<div id="message" class="updated fade"><p><strong>%s</strong></p></div>'."\n",
-					empty($err_message) ? __('Done!', ControlAws::TEXT_DOMAIN) : $err_message
+					empty($err_message) ? __('Done!', ControlSession::TEXT_DOMAIN) : $err_message
 					);
 				self::$options = $options;
 			}
@@ -206,7 +210,7 @@ class ControlAws_Admin {
 						'<option value="%1$s"%2$s>%3$s</option>',
 						esc_attr($region),
 						$region == self::$options[$field] ? ' selected' : '',
-						__($region, ControlAws::TEXT_DOMAIN));
+						__($region, ControlSession::TEXT_DOMAIN));
 				}
 				$input_field .= '</select></td>';
 			}
